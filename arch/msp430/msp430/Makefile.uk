@@ -1,0 +1,3 @@
+CINCLUDES   += -I$(CONFIG_UK_BASE)/arch/msp430/msp430/include
+ASINCLUDES  += -I$(CONFIG_UK_BASE)/arch/msp430/msp430/include
+CXXINCLUDES += -I$(CONFIG_UK_BASE)/arch/msp430/msp430/include

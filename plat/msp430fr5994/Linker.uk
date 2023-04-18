@@ -1,0 +1,59 @@
+ifeq (MSP430,$(CONFIG_UK_ARCH))
+MSP430FR5994_LINK_LIBGCC_FLAG	:= -lgcc
+endif
+
+
+##
+## Link image
+##
+MSP430FR5994_IMAGE := $(BUILD_DIR)/$(CONFIG_UK_NAME)_msp430fr5994-$(CONFIG_UK_ARCH)
+MSP430FR5994_DEBUG_IMAGE := $(MSP430FR5994_IMAGE).dbg
+
+MSP430FR5994_LD_SCRIPT_FLAGS := $(addprefix -Wl$(comma)-dT$(comma),\
+			 $(UK_PLAT_MSP430FR5994_DEF_LDS))
+MSP430FR5994_LD_SCRIPT_FLAGS += $(addprefix -Wl$(comma)-T$(comma),\
+			$(MSP430FR5994_LD_SCRIPT-y) $(EXTRA_LD_SCRIPT-y))
+
+$(MSP430FR5994_DEBUG_IMAGE): $(MSP430FR5994_ALIBS) $(MSP430FR5994_ALIBS-y) $(MSP430FR5994_OLIBS) $(MSP430FR5994_OLIBS-y) \
+		    $(UK_ALIBS) $(UK_ALIBS-y) $(UK_OLIBS) $(UK_OLIBS-y)
+	$(call build_cmd,LD,,$(MSP430FR5994_DEBUG_IMAGE),\
+			$(LD) $(LDFLAGS) $(LDFLAGS-y) \
+			$(MSP430FR5994_LDFLAGS) $(MSP430FR5994_LDFLAGS-y) \
+			$(MSP430FR5994_OLIBS) $(MSP430FR5994_OLIBS-y) \
+			$(UK_OLIBS) $(UK_OLIBS-y) \
+			$(MSP430FR5994_ALIBS) $(MSP430FR5994_ALIBS-y) \
+			$(UK_ALIBS) $(UK_ALIBS-y) \
+			$(MSP430FR5994_LD_SCRIPT_FLAGS) \
+			$(MSP430FR5994_LINK_LIBGCC_FLAG) \
+			-lmul_f5 -lgcc \
+			-o $@)
+
+
+$(MSP430FR5994_IMAGE): $(MSP430FR5994_DEBUG_IMAGE)
+	$(call build_cmd,SCSTRIP,,$@,\
+		$(SCRIPTS_DIR)/sect-strip.py \
+			$(SECT_STRIP_FLAGS) $(SECT_STRIP_FLAGS-y) \
+			$< -o $@ && \
+		$(STRIP) -s $@)
+
+$(MSP430FR5994_IMAGE).sym: $(MSP430FR5994_DEBUG_IMAGE)
+	$(call build_cmd,NM,,$@, $(NM) -n $< > $@)
+
+$(MSP430FR5994_IMAGE).gz: $(MSP430FR5994_IMAGE)
+	$(call build_cmd,GZ,,$@, $(GZIP) -f -9 -c $< >$@)
+
+$(MSP430FR5994_IMAGE).hex: $(MSP430FR5994_IMAGE)
+	$(call build_cmd,OBJCOPY,,$@, $(OBJCOPY) -O ihex  $< $@)
+
+# register images to the build
+ifeq ($(CONFIG_PLAT_MSP430FR5994),y)
+UK_DEBUG_IMAGES-y                     += $(MSP430FR5994_DEBUG_IMAGE)
+UK_IMAGES-y                           += $(MSP430FR5994_IMAGE)
+UK_IMAGES-y                           += $(MSP430FR5994_IMAGE).hex
+UK_IMAGES-$(CONFIG_OPTIMIZE_SYMFILE)  += $(MSP430FR5994_IMAGE).sym
+UK_IMAGES-$(CONFIG_OPTIMIZE_COMPRESS) += $(MSP430FR5994_IMAGE).gz
+endif
+
+# ...for cleaning:
+LIBMSP430FR5994PLAT_CLEAN += $(call build_clean,$(MSP430FR5994_IMAGE).o)
+LIBMSP430FR5994PLAT_CLEAN += $(call build_clean,$(MSP430FR5994_IMAGE).ld.o)

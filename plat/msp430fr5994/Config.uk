@@ -1,0 +1,6 @@
+menuconfig PLAT_MSP430FR5994
+       bool "MSP430FR5994"
+       default n
+       depends on ARCH_MSP430
+       help
+                Create a Unikraft image that runs a MSP430FR5994 Chip

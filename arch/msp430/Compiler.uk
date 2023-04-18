@@ -1,0 +1,4 @@
+# Include forward declarations by corresponding architecutes
+ifeq ($(CONFIG_ARCH_MSP430),y)
+	include $(CONFIG_UK_BASE)/arch/msp430/msp430/Compiler.uk
+endif
